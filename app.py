@@ -1,6 +1,7 @@
 import yfinance as yf
 import pandas as pd
 import streamlit as st
+import io
 
 # Función para verificar si el ticker existe en Yahoo Finance
 def validate_ticker(ticker):
@@ -66,6 +67,7 @@ if st.button('Ejecutar Estrategia'):
 
             # Lista para registrar el estado en cada paso
             trade_log = []
+            trade_summary = []  # Nueva lista para registrar el resumen de operaciones
             previous_close = first_close_price
 
             for idx, (date, row) in enumerate(sp.iterrows()):
@@ -79,27 +81,33 @@ if st.button('Ejecutar Estrategia'):
 
                 price_compra = None
                 price_venta = None
+                salto_orden = ""  # Nueva columna para marcar el salto de orden
 
                 if idx == 0:
-                    trade_log.append([date, close_price, daily_variation, low_price, high_price, daily_range_variation, open_price, state, liquidity, position * close_price, None, None])
+                    trade_log.append([date, close_price, daily_variation, low_price, high_price, daily_range_variation, open_price, state, liquidity, position * close_price, None, None, salto_orden])
                     previous_close = close_price
                     continue
 
                 if position > 0:
                     sell_price = max(sell_price, previous_close * (1 - sell_threshold / 100))
 
-                    if high_price < sell_price and high_price < previous_close:
+                    if open_price < sell_price:
                         liquidity = position * open_price
                         position = 0
                         buy_price = close_price * (1 + buy_threshold / 100)
                         state = 'V'
                         price_venta = open_price
+                        salto_orden = "X"  # Venta realizada por gap en la apertura
+                        # Añadir venta al resumen
+                        trade_summary.append(f"Venta realizada el {date} a {open_price} debido a salto en la orden")
                     elif low_price <= sell_price <= high_price:
                         liquidity = position * sell_price
                         position = 0
                         buy_price = close_price * (1 + buy_threshold / 100)
                         state = 'V'
                         price_venta = sell_price
+                        # Añadir venta al resumen
+                        trade_summary.append(f"Venta realizada el {date} a {sell_price}")
                 else:
                     state = 'V'
                     if buy_price is None:
@@ -107,24 +115,29 @@ if st.button('Ejecutar Estrategia'):
                     else:
                         buy_price = min(buy_price, previous_close * (1 + buy_threshold / 100))
 
-                    if low_price > buy_price and low_price > previous_close:
+                    if open_price > buy_price:
                         position = liquidity / open_price
                         liquidity = 0
                         sell_price = close_price * (1 - sell_threshold / 100)
                         state = 'C'
                         price_compra = open_price
+                        salto_orden = "X"  # Compra realizada por gap en la apertura
+                        # Añadir compra al resumen
+                        trade_summary.append(f"Compra realizada el {date} a {open_price} debido a salto en la orden")
                     elif low_price <= buy_price <= high_price:
                         position = liquidity / buy_price
                         liquidity = 0
                         sell_price = close_price * (1 - sell_threshold / 100)
                         state = 'C'
                         price_compra = buy_price
+                        # Añadir compra al resumen
+                        trade_summary.append(f"Compra realizada el {date} a {buy_price}")
 
-                trade_log.append([date, close_price, daily_variation, low_price, high_price, daily_range_variation, open_price, state, liquidity, position * close_price, price_compra, price_venta])
+                trade_log.append([date, close_price, daily_variation, low_price, high_price, daily_range_variation, open_price, state, liquidity, position * close_price, price_compra, price_venta, salto_orden])
                 previous_close = close_price
 
             # Convertir el trade log en DataFrame
-            trade_df = pd.DataFrame(trade_log, columns=['Fecha', 'Cierre', 'Variación día al cierre', 'Min', 'Max', 'Variación día Min-Max', 'Apertura', 'Estado', 'Tesorería', 'Cartera', 'Precio Compra', 'Precio Venta'])
+            trade_df = pd.DataFrame(trade_log, columns=['Fecha', 'Cierre', 'Variación día al cierre', 'Min', 'Max', 'Variación día Min-Max', 'Apertura', 'Estado', 'Tesorería', 'Cartera', 'Precio Compra', 'Precio Venta', 'Salto en la orden'])
 
             # Calcular el retorno final
             final_value = trade_df.iloc[-1]['Cartera'] + trade_df.iloc[-1]['Tesorería']
@@ -142,4 +155,17 @@ if st.button('Ejecutar Estrategia'):
 
             # Botón para descargar el archivo Excel
             with open(file_name, 'rb') as file:
-                st.download_button('Descargar Excel', data=file, file_name=file_name)
+                st.download_button('Descargar Excel Operativa', data=file, file_name=file_name)
+
+            # Crear archivo de texto con el resumen de operaciones
+            summary_txt = "\n".join(trade_summary)
+            summary_file_name = f'{ticker}_Resumen_Operativa.txt'
+
+            # Botón para descargar el archivo de texto con el resumen
+            st.download_button(
+                label="Descargar Resumen de Operaciones",
+                data=summary_txt,
+                file_name=summary_file_name,
+                mime="text/plain"
+            )
+    
