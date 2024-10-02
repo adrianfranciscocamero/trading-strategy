@@ -168,4 +168,4 @@ if st.button('Ejecutar Estrategia'):
                 file_name=summary_file_name,
                 mime="text/plain"
             )
-    
+
