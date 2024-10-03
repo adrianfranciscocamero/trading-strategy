@@ -6,11 +6,8 @@ import io
 # Función para verificar si el ticker existe en Yahoo Finance
 def validate_ticker(ticker):
     try:
-        # Eliminar caracteres especiales solo para la validación
-        if ticker.startswith('^'):
-            stock = yf.Ticker(ticker)
-        else:
-            stock = yf.Ticker(ticker.replace('^', ''))  # Para evitar problemas en la validación
+        # Para evitar problemas de validación, manipulamos los tickers con '^'
+        stock = yf.Ticker(ticker.replace('^', '%5E'))  # Escapamos el '^' por '%5E' en URLs
         stock_info = stock.history(period="1d")
         if stock_info.empty:
             return False
@@ -46,16 +43,17 @@ sell_threshold = st.number_input('Introduce el porcentaje de venta (por ejemplo,
 if st.button('Ejecutar Estrategia'):
 
     # Validar si el ticker existe
-    if not validate_ticker(ticker):
+    ticker_escaped = ticker.replace('^', '%5E')  # Escapar el '^' por '%5E'
+    if not validate_ticker(ticker_escaped):
         st.error(f"El ticker '{ticker}' no se encuentra en Yahoo Finance. Por favor, introduce un ticker válido.")
     else:
         # Descarga de datos
-        sp = yf.download(ticker, start=start_date, end=end_date)
+        sp = yf.download(ticker_escaped, start=start_date, end=end_date)
 
         # Verificamos si el último día está en los datos descargados
         if end_date not in sp.index:
             # Si el end_date no está en el índice, añadimos un día adicional para incluirlo en la descarga
-            sp = yf.download(ticker, start=start_date, end=pd.to_datetime(end_date) + pd.Timedelta(days=1))
+            sp = yf.download(ticker_escaped, start=start_date, end=pd.to_datetime(end_date) + pd.Timedelta(days=1))
 
         if sp.empty:
             st.error(f"No se encontraron datos para el ticker '{ticker}' entre {start_date} y {end_date}.")
