@@ -6,7 +6,11 @@ import io
 # Función para verificar si el ticker existe en Yahoo Finance
 def validate_ticker(ticker):
     try:
-        stock = yf.Ticker(ticker)
+        # Eliminar caracteres especiales solo para la validación
+        if ticker.startswith('^'):
+            stock = yf.Ticker(ticker)
+        else:
+            stock = yf.Ticker(ticker.replace('^', ''))  # Para evitar problemas en la validación
         stock_info = stock.history(period="1d")
         if stock_info.empty:
             return False
@@ -155,7 +159,7 @@ if st.button('Ejecutar Estrategia'):
 
             # Botón para descargar el archivo Excel
             with open(file_name, 'rb') as file:
-                st.download_button('Descargar Excel Operativa', data=file, file_name=file_name)
+                st.download_button('Descargar Excel', data=file, file_name=file_name)
 
             # Crear archivo de texto con el resumen de operaciones
             summary_txt = "\n".join(trade_summary)
@@ -168,8 +172,5 @@ if st.button('Ejecutar Estrategia'):
                 file_name=summary_file_name,
                 mime="text/plain"
             )
-
-
-
 
 
