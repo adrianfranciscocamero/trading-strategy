@@ -135,11 +135,11 @@ if st.button('Ejecutar Estrategia'):
                         # Añadir compra al resumen
                         trade_summary.append(f"Compra realizada el {date} a {buy_price}")
 
-                trade_log.append([date, close_price, daily_variation, low_price, high_price, daily_range_variation, open_price, state, liquidity, position * close_price, price_compra, price_venta, salto_orden])
+                trade_log.append([date, close_price, daily_variation, low_price, high_price, daily_range_variation, open_price, state, liquidity, position * close_price, price_compra, price_venta, salto_orden,buy_price,sell_price])
                 previous_close = close_price
 
             # Convertir el trade log en DataFrame
-            trade_df = pd.DataFrame(trade_log, columns=['Fecha', 'Cierre', 'Variación día al cierre', 'Min', 'Max', 'Variación día Min-Max', 'Apertura', 'Estado', 'Tesorería', 'Cartera', 'Precio Compra', 'Precio Venta', 'Salto en la orden'])
+            trade_df = pd.DataFrame(trade_log, columns=['Fecha', 'Cierre', 'Variación día al cierre', 'Min', 'Max', 'Variación día Min-Max', 'Apertura', 'Estado', 'Tesorería', 'Cartera', 'Precio Compra', 'Precio Venta', 'Salto en la orden', 'Compra', 'Venta'])
 
             # Calcular el retorno final
             final_value = trade_df.iloc[-1]['Cartera'] + trade_df.iloc[-1]['Tesorería']
