@@ -154,6 +154,14 @@ if st.button('Ejecutar Estrategia'):
 
             # Mostrar el retorno final al usuario
             st.success(f"Simulación completada. El retorno final de la estrategia ({buy_threshold}, {-sell_threshold}) % para el {ticker} entre {start_simulation_date} y {end_simulation_date} es del {return_percentage:.2f}%")
+
+            # Retorno al contado
+            initial_close_price = sp.iloc[0]['Close']  # Precio de cierre inicial
+            final_close_price = sp.iloc[-1]['Close']  # Precio de cierre final
+            cash_return = ((final_close_price - initial_close_price) / initial_close_price) * 100
+
+            # Mostrar el retorno al contado al usuario
+            st.info(f"El retorno al contado para el {ticker} entre {start_simulation_date} y {end_simulation_date} es del {cash_return:.2f}%")
             
             # Botón para descargar el archivo Excel
             with open(file_name, 'rb') as file:
