@@ -90,7 +90,7 @@ if st.button('Ejecutar Estrategia'):
                     previous_close = close_price
                     continue
 
-                if position > 0:
+                if isinstance(position, (int, float)) and position > 0:
                     sell_price = max(sell_price, previous_close * (1 - sell_threshold / 100))
 
                     if open_price < sell_price:
