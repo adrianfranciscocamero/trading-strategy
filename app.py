@@ -48,13 +48,17 @@ if st.button('Ejecutar Estrategia'):
         st.error(f"El ticker '{ticker}' no se encuentra en Yahoo Finance. Por favor, introduce un ticker válido.")
     else:
         # Descarga de datos
-        sp = yf.download(ticker_escaped, start=start_date, end=end_date)
+        sp = yf.download(ticker_escaped, start=start_date, end=end_date, auto_adjust=False, multi_level_index=False)
 
         # Verificamos si el último día está en los datos descargados
         if end_date not in sp.index:
             # Si el end_date no está en el índice, añadimos un día adicional para incluirlo en la descarga
-            sp = yf.download(ticker_escaped, start=start_date, end=pd.to_datetime(end_date) + pd.Timedelta(days=1))
-
+            sp = yf.download(ticker_escaped, start=start_date, end=pd.to_datetime(end_date) + pd.Timedelta(days=1), auto_adjust=False, multi_level_index=False)
+            
+        # Eliminar el segundo nivel del índice de columnas si está presente
+        if isinstance(sp.columns, pd.MultiIndex):
+            sp.columns = sp.columns.droplevel(1)
+            
         if sp.empty:
             st.error(f"No se encontraron datos para el ticker '{ticker}' entre {start_date} y {end_date}.")
         else:
