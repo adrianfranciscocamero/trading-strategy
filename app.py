@@ -6,7 +6,7 @@ import io
 # --- Diagnóstico adicional ---
 if st.button("Test conexión yfinance con ES=F"):
     try:
-        df_test = yf.download("ES=F", period="2d")
+        df_test = yf.download("ES=F", period="2d", auto_adjust=False, multi_level_index=False)
         st.write("Resultado de yf.download('ES=F'):", df_test)
     except Exception as e:
         st.error(f"❌ Error al descargar ES=F: {e}")
@@ -37,9 +37,9 @@ sell_threshold = st.number_input('Introduce el porcentaje de venta (por ejemplo,
 # Función alternativa para validar el ticker usando yf.download()
 def validate_ticker(ticker):
     try:
-        df = yf.download(ticker, period="2d")
-        st.write(f"DEBUG - Validación de ticker '{ticker}':", df)  # Diagnóstico
-        return not df.empty
+        df = yf.download(ticker, period="2d", auto_adjust=False, multi_level_index=False)
+        st.write(f"DEBUG - Validación de ticker '{ticker}':", df)
+        return not df.empty and 'Close' in df.columns
     except Exception as e:
         st.error(f"⚠️ Error al validar el ticker '{ticker}': {e}")
         return False
@@ -50,10 +50,10 @@ if st.button('Ejecutar Estrategia'):
         st.error(f"El ticker '{ticker}' no se encuentra en Yahoo Finance. Por favor, introduce un ticker válido.")
     else:
         # Descarga de datos
-        sp = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, progress=False)
+        sp = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, multi_level_index=False, progress=False)
 
         if end_date not in sp.index:
-            sp = yf.download(ticker, start=start_date, end=pd.to_datetime(end_date) + pd.Timedelta(days=1), auto_adjust=False, progress=False)
+            sp = yf.download(ticker, start=start_date, end=pd.to_datetime(end_date) + pd.Timedelta(days=1), auto_adjust=False, multi_level_index=False, progress=False)
 
         if isinstance(sp.columns, pd.MultiIndex):
             sp.columns = sp.columns.droplevel(1)
@@ -166,6 +166,7 @@ if st.button('Ejecutar Estrategia'):
                 file_name=summary_file_name,
                 mime="text/plain"
             )
+
 
 
 
