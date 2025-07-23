@@ -29,13 +29,18 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Definir límites para las fechas
+today = datetime.date.today()
+min_date = datetime.date(1980, 1, 1)  # Fecha mínima permitida
+max_date = today  # Fecha máxima permitida
+
 # Título de la aplicación
 st.title('Simulación de Estrategia de Trading')
 
 # Inputs del usuario
 ticker = st.text_input('Introduce el ticker del activo de Yahoo Finance')
-start_date = st.date_input('Fecha de inicio')
-end_date = st.date_input('Fecha final')
+start_date = st.date_input('Fecha de inicio', value=today, min_value=min_date, max_value=max_date)
+end_date = st.date_input('Fecha final',value=today, min_value=min_date, max_value=max_date)
 buy_threshold = st.number_input('Introduce el porcentaje de compra (por ejemplo, 1 para 1%):', value=0.5)
 sell_threshold = st.number_input('Introduce el porcentaje de venta (por ejemplo, 1 para 1%):', value=0.5)
 
