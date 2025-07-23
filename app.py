@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 import streamlit as st
 import io
+import datetime
 
 # Función para verificar si el ticker existe en Yahoo Finance
 def validate_ticker(ticker):
